@@ -14,20 +14,20 @@ fun main(args: Array<String>) {
     }
 
     fun crtDisplay(input: List<String>) {
-        //transform a list of Strings to a list of Instructions
+        //  transform a list of Strings to a list of Instructions
         val instructions: List<Instruction> = input.map { it.toInstruction() }
-
-        val xRegisterAtTick: List<Int> = buildList {
-            // transform instructions to x register values
-            var x = 1 // needs a running x register value
-            for (i in instructions) {
-                repeat(i.ticks) {
-                    this.add(x)
-                }
-                x += i.inc
+        // expand out the clock ticks making a list of values to add to x register
+        // it needs to be flattened
+        val instFlatExpanded: List<Int> = instructions.flatMap { i ->
+            buildList {
+                repeat(i.ticks - 1) { this.add(0) }
+                this.add(i.inc)
             }
-            this.add(x)
         }
+
+        // calculate the x values
+        val xRegisterAtTick = instFlatExpanded.runningFold(1) { acc, i -> acc + i }
+
         for (i in 0 until (crtW * crtH)) {
             // transform xRegister values to pixels(String)
             // chop up in lines
