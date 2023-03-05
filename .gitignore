@@ -21,3 +21,7 @@ out/
 
 ### Mac OS ###
 .DS_Store
+
+src/main/resources/Day.txt
+
+src/main/resources/Day_test.txt
