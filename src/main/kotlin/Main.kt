@@ -49,18 +49,16 @@ fun main(args: Array<String>) {
      * @param input List of strings representing instructions to process.
      * @return A list of strings representing visual representation of instructions.
      */
-    fun crtScan(input: List<String>): List<String> =
+    fun crtScan(input: List<String>, crtW: Int = 40): List<String> =
         input.map { it.toInstruction() }// converts input to instruction
             .flatMap { i -> i.expandInstruction() } // expands multi tick instructions
             .runningFold(1) { x, i -> x + i } // runs through the instructions accumulating x
             .mapIndexed { index, x -> x.toPixel(index) } // converts index and x register to a pixel
-            .chunked(40).map { it.joinToString("") } // spilt into lines for the screen
+            .chunked(crtW).map { it.joinToString("") } // spilt into lines for the screen
 
 
     fun List<String>.display() { // side effect method
-        this.forEach {
-            println(it)
-        }
+        this.forEach(::println)
     }
 
     val testInput = readInput("Day_test")
