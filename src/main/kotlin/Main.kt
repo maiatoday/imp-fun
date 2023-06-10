@@ -1,45 +1,57 @@
 import java.io.File
 
 fun main(args: Array<String>) {
-
     val crtW = 40
+    val crtH = 6
 
     data class Instruction(val ticks: Int = 1, val inc: Int = 0)
 
-    fun String.toInstruction() = when (substringBefore(" ")) {
-        "noop" -> Instruction()
-        "addx" -> Instruction(ticks = 2, inc = substringAfter(" ").toInt())
-        else -> error("oops")
+    fun parseInstruction(s: String): Instruction {
+        val opcode = s.substringBefore(" ")
+        return when (opcode) {
+            "noop" -> Instruction()
+            "addx" -> Instruction(ticks = 2, inc = s.substringAfter(" ").toInt())
+            else -> error("oops")
+        }
     }
 
-    fun Instruction.expandInstruction(): List<Int> =
-        buildList {
-            repeat(this@expandInstruction.ticks - 1) { this.add(0) }
-            this.add(this@expandInstruction.inc)
+    fun buildXRegisterAtTick(instructions: List<Instruction>): MutableList<Int> {
+        val xRegisterAtTick = mutableListOf<Int>()
+        var x = 1 // needs a running x register value
+        for (instruction in instructions) {
+            for (i in 0 until instruction.ticks) {
+                xRegisterAtTick.add(x)
+            }
+            x += instruction.inc
         }
+        xRegisterAtTick.add(x)
+        return xRegisterAtTick
+    }
 
-    fun Int.toPixel(index: Int): String = if (index % crtW in this - 1..this + 1) "🔴" else "⚫️"
+    fun printCRT(input: List<String>) {
+        val instructions: MutableList<Instruction> = mutableListOf()
+        for (s in input) {
+            instructions.add(parseInstruction(s))
+        }
+        val xRegisterAtTick = buildXRegisterAtTick(instructions)
 
-    fun crtScan(input: List<String>): List<String> =
-        input.map { it.toInstruction() }// converts input to instruction
-            .flatMap { i -> i.expandInstruction() } // expands multi tick instructions
-            .runningFold(1) { x, i -> x + i } // runs through the instructions accumulating x
-            .mapIndexed { index, x -> x.toPixel(index) } // converts index and x register to a pixel
-            .chunked(40).map { it.joinToString("") } // spilt into lines for the screen
-
-
-    fun List<String>.display() { // side effect method
-        this.forEach {
-            println(it)
+        for (i in 0 until (crtW * crtH)) {
+            if (i % crtW == 0) print("\n")
+            if (i % crtW in xRegisterAtTick[i] - 1..xRegisterAtTick[i] + 1) {
+                print("🔴") 
+            } else {
+                print("⚫️")
+            }
         }
     }
 
     val testInput = readInput("Day_test")
     println(" ============== test input =============")
-    crtScan(testInput).display()
+    printCRT(testInput)
+    println("\n\n")
     println("============== real input ==============")
     val input = readInput("Day")
-    crtScan(input).display()
+    printCRT(input)
     println("\n\n")
 }
 
